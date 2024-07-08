@@ -1,0 +1,15 @@
+{
+    "cSpell.words": [
+        "itemstack",
+        "mcms",
+        "Setblock",
+        "tqdm",
+        "unbreaking"
+    ],
+    "python.defaultInterpreterPath": "C:\\Users\\Pike\\anaconda3\\envs\\ML\\python.exe",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+}
