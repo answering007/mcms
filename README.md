@@ -15,6 +15,9 @@
 
 ## Overview
 This is an example that uses a [MessageServer](https://github.com/answering007/MessageServer) for Spigot to send commands
+<picture>
+  <img alt="Build" src="https://github.com/answering007/mcms/blob/master/Build.png?raw=true">
+</picture>
 
 ## Quick example
 ```python
