@@ -34,7 +34,7 @@ def parse_state(block_data: str) -> Dict[str, Any]:
         >>> parse_state("minecraft:chest[string_value=mystring, int_value=1, bool_value=True]")
         {'string_value': 'mystring', 'int_value': 1, 'bool_value': True}
     """
-    def parse_primitive(value: str) -> Any:
+    def parse_primitive(value: str) -> Union[int, bool, str]:
         if value.isdecimal() or value.isdigit():
             return int(value)
         elif value.lower() == "true":

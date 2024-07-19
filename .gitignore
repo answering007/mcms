@@ -1,2 +1,3 @@
 dist/
 developer/
+.vscode/tasks.json

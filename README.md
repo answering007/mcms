@@ -29,7 +29,7 @@ connection = Connection("localhost", 8000, ("Admin", "123"))
 
 # Say Hello World to server
 response = connection.execute_commands("say hello world!")
-print("Response code: ", response[0], "Command result: ", response[1])
+print("Command result:", response)
 ```
 Extra examples can be found **[here](https://github.com/answering007/mcms/tree/master/examples)**
 ## Installation

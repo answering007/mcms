@@ -41,17 +41,12 @@ class Connection:
     def _encode_text(self, text: str) -> str:
         return base64.b64encode(text.encode(encoding="utf-8")).decode()
 
-    def _is_ok(self, response: requests.Response) -> bool:
-        ok = 200
-        return response.status_code == ok
-
-    def _process_response(self, object_to_dump, url: str, timeout: int) -> Tuple[int, Any]:
+    def _process_response(self, object_to_dump, url: str, timeout: int) -> Any:
         """
         Process response:
         This method takes an object to dump and translate to JSON, an URL where to send the request,
         and a timeout in seconds. It sends a POST request to the URL with the encoded data as payload.
-        If the response status code is not 200, it returns a tuple with the status code and an empty
-        list. Otherwise, it returns a tuple with the status code and the JSON object in the response.
+        Return JSON object in the response.
 
         Args:
             object_to_dump (object): The object to dump and translate to JSON.
@@ -59,8 +54,7 @@ class Connection:
             timeout (int): The timeout in seconds.
 
         Returns:
-            Tuple[int, Any]: A tuple with the status code and the JSON object in the response.
-                             If the status code is not 200, the JSON object is an empty list.
+            Any: A JSON object in the response.
         """
         # Dump the object to JSON and encode it
         # The object is converted to a JSON string and then encoded using base64
@@ -68,23 +62,19 @@ class Connection:
         json_data = json.dumps(object_to_dump)
         encoded_data = self._encode_text(json_data)
 
-        # Process the response
         # Send a POST request to the URL with the encoded data as payload
         response = requests.post(
             url, data=encoded_data, timeout=timeout, auth=self._credentials)
 
-        # Check if the response status code is not 200
-        # If it's not 200, return a tuple with the status code and an empty list
-        if self._is_ok(response) is False:
-            return (response.status_code, [])
+        # Check if the response was successful
+        response.raise_for_status()
 
-        # If the response status code is 200, decode the JSON object in the response
-        # and return a tuple with the status code and the JSON object
-        return (response.status_code, json.loads(response.text))
+        # Return JSON object in the response
+        return json.loads(response.text)
 
     def execute_commands(self,
                           command: Union[CommandInfo, List[CommandInfo]],
-                          timeout: Optional[int] = 10) -> Tuple[int, List[bool]]:
+                          timeout: Optional[int] = 10) -> List[bool]:
         """Execute a command or list of commands
 
         This method sends a command or a list of commands to the Minecraft server.
@@ -103,7 +93,7 @@ class Connection:
             timeout (Optional[int], optional): Request timeout in seconds. Defaults to 10.
 
         Returns:
-            Tuple[int, List[bool]]: Tuple with exit code and list of bool command results
+            List[bool]: List of bool command results
         """
         # Helper function to convert a command to a dictionary
         def convert_to_dict(command: CommandInfo) -> Dict[str, str]:
@@ -165,8 +155,8 @@ class Connection:
             timeout (Optional[int], optional): Timeout in seconds. Defaults to 10.
 
         Returns:
-            Tuple[int, List[GetBlockResponse]]:
-                Tuple of status code and list of GetBlockResponse.
+            List[GetBlockResponse]:
+                List of GetBlockResponse.
                 GetBlockResponse contains information about the retrieved block,
                 including its location, state, and inventory.
         """
@@ -181,9 +171,8 @@ class Connection:
         # Convert each Location object in block_request to its request data representation
         blocks_list = [item.to_request_data() for item in block_request]
 
-        # Process response
         # Send the request and get the response
-        status_code, block_response = self._process_response(blocks_list, url, timeout)
+        block_response = self._process_response(blocks_list, url, timeout)
 
         # Join request and response
         # Combine the request (Location) and response (Dict[str, Any]) into a list of tuples
@@ -196,13 +185,13 @@ class Connection:
         # including its location, state, and inventory.
         result = [GetBlockResponse.from_request_response_data(source[0], source[1]) for source in block_source]
 
-        # Return the status code and the list of GetBlockResponse objects
-        return (status_code, result)
+        # Return the list of GetBlockResponse objects
+        return result
 
     def set_blocks(self,
                    blocks: Union[Block, List[Block]],
                    timeout: Optional[int] = 10
-                   ) -> Tuple[int, List[Tuple[bool, str]]]:
+                   ) -> List[Tuple[bool, str]]:
         """
         Set blocks:
         This method sets one or more blocks in the Minecraft world.
@@ -212,8 +201,8 @@ class Connection:
             timeout (Optional[int], optional): Optional timeout in seconds. Defaults to 10.
 
         Returns:
-            Tuple[int, List[Tuple[bool, str]]]: Tuple of status code and list of
-            (success, exception). This list contains a tuple for each block that was set.
+            List[Tuple[bool, str]]: List of (success, exception).
+            This list contains a tuple for each block that was set.
             The tuple contains a boolean value indicating whether the set operation was
             successful and a string representing any exception that occurred during the set operation.
         """
@@ -232,7 +221,7 @@ class Connection:
 
     def get_players(self,
                     only_online: bool = True,  # noqa: FBT001, FBT002
-                    timeout: Optional[int] = 10) -> Tuple[int, List[Player]]:
+                    timeout: Optional[int] = 10) -> List[Player]:
         """Get players
 
         Args:
@@ -240,7 +229,7 @@ class Connection:
             timeout (Optional[int], optional): Timeout in seconds. Defaults to 10.
 
         Returns:
-            Tuple[int, List[Player]]: Tuple of status code and list of players
+            List[Player]: List of players
         """
 
         # Construct the URL for the getPlayers API endpoint
@@ -248,11 +237,11 @@ class Connection:
 
         # Call the _process_response method to send the request and process the response
         # The response is a list of dictionaries representing the players.
-        code, response = self._process_response(only_online, url, timeout)
+        response = self._process_response(only_online, url, timeout)
 
         # Convert each dictionary in the list to a Player object
         # The Player object contains information about the player, such as their name, location, health, and items.
         players = [Player.from_request_data(p) for p in response]
 
         # Return a tuple containing the status code and the list of Player objects
-        return code, players
+        return players
